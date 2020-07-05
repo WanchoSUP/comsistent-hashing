@@ -1,2 +1,2 @@
 # comsistent-hashing
-A consistent_hash implementation
+A consistent hashing implementation
