@@ -1,7 +1,7 @@
 # consistent-hashing
 A consistent hashing implementation
 
-The testing:
+The test Results:
 192.168.100.1, hitted count: 168851
 192.168.100.2, hitted count: 179216
 192.168.100.3, hitted count: 163182
