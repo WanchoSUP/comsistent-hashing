@@ -1,2 +1,2 @@
 # comsistent-hashing
-A consistent hashing implementation
+A consistent_hash implementation writen in c++
