@@ -27,18 +27,12 @@ namespace ConsistenHashing
 
         void removeNode(const std::string &nodeKey)
         {
+            auto finder = [&](decltype(nodeMap)::const_reference pair) { return nodeKey == pair.second; };
+
             auto it = nodeMap.begin();
-            auto endIter = nodeMap.end();
-            while (it != endIter)
+            while ((it = std::find_if(it, nodeMap.end(), finder)) != nodeMap.end())
             {
-                if (nodeKey == it->second)
-                {
-                    nodeMap.erase(it);
-                }
-                else
-                {
-                    ++it;
-                }
+                nodeMap.erase(it++);
             }
         }
 
