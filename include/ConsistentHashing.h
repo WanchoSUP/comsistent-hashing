@@ -19,7 +19,8 @@ namespace ConsistenHashing
         virtual T operator()(const K &key) = 0;
     };
 
-    struct stdhash : hash<HashCode_t, std::string>
+    struct stdhash
+        : public hash<HashCode_t, std::string>
     {
         HashCode_t operator()(const std::string &key)
         {
@@ -61,10 +62,8 @@ namespace ConsistenHashing
             if (nodeMap.empty())
                 return "";
 
-            HashCode_t hashcode = hash(key);
-
             // Maybe we could use a binary search to improve efficiency.
-            auto biggerThan = [&](decltype(nodeMap)::const_reference pair) { return std::get<0>(pair) > hashcode; };
+            auto biggerThan = [&](decltype(nodeMap)::const_reference pair) { return std::get<0>(pair) > hash(key); };
             auto firstBiggerThan = std::find_if(nodeMap.begin(), nodeMap.end(), biggerThan);
 
             if (nodeMap.end() != firstBiggerThan)
