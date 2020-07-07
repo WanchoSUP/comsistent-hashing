@@ -9,10 +9,24 @@
 #include <experimental/random>
 #include <algorithm>
 
-typedef uint32_t HashCode_t;
-
 namespace ConsistenHashing
 {
+    typedef uint32_t HashCode_t;
+
+    template <typename T, typename K>
+    struct hash
+    {
+        virtual T operator()(const K &key) = 0;
+    };
+
+    struct stdhash : hash<HashCode_t, std::string>
+    {
+        HashCode_t operator()(const std::string &key)
+        {
+            std::size_t hash = std::hash<std::string>{}(key);
+            return static_cast<HashCode_t>(hash & 0xffff'ffff);
+        }
+    };
 
     class HashRing
     {
@@ -38,6 +52,12 @@ namespace ConsistenHashing
 
         std::string getNode(const std::string &key)
         {
+            return getNode(key, stdhash());
+        }
+
+        template <typename T>
+        std::string getNode(const std::string &key, T hash)
+        {
             if (nodeMap.empty())
                 return "";
 
@@ -58,12 +78,6 @@ namespace ConsistenHashing
         }
 
     private:
-        HashCode_t hash(const std::string &key)
-        {
-            std::size_t hash = std::hash<std::string>{}(key);
-            return static_cast<HashCode_t>(hash & 0xffff'ffff);
-        }
-
         std::map<HashCode_t, std::string> nodeMap;
     };
 
