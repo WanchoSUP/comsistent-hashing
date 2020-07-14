@@ -11,32 +11,14 @@
 
 namespace ConsistenHashing
 {
-    typedef uint32_t HashCode_t;
-
-    template <typename T, typename K>
-    struct hash
-    {
-        virtual T operator()(const K &key) = 0;
-    };
-
-    struct stdhash
-        : public hash<HashCode_t, std::string>
-    {
-        HashCode_t operator()(const std::string &key)
-        {
-            std::size_t hash = std::hash<std::string>{}(key);
-            return static_cast<HashCode_t>(hash & 0xffff'ffff);
-        }
-    };
-
     class HashRing
     {
     public:
-        void addNode(const std::string &nodeKey, int virtualNodeNumber)
+        void addNode(const std::string &nodeKey, int virtualNums)
         {
-            for (int i = 0; i < virtualNodeNumber; i++)
+            for (int i = 0; i < virtualNums; i++)
             {
-                nodeMap.emplace(std::experimental::randint(0x0000'0000u, 0xffff'ffffu), nodeKey);
+                nodeMap.emplace(getHash(nodeKey + std::to_string(i)), nodeKey);
             }
         }
 
@@ -44,31 +26,22 @@ namespace ConsistenHashing
         {
             auto finder = [&](decltype(nodeMap)::const_reference pair) { return nodeKey == pair.second; };
 
-            auto it = nodeMap.begin();
-            while ((it = std::find_if(it, nodeMap.end(), finder)) != nodeMap.end())
+            for (auto it = nodeMap.begin(); (it = std::find_if(it, nodeMap.end(), finder)) != nodeMap.end(); ++it)
             {
-                nodeMap.erase(it++);
+                nodeMap.erase(it);
             }
         }
 
-        std::string getNode(const std::string &key)
-        {
-            return getNode(key, stdhash());
-        }
-
-        template <typename T>
-        std::string getNode(const std::string &key, T hash)
+        std::string getNode(const std::string &nodeKey)
         {
             if (nodeMap.empty())
                 return "";
 
-            // Maybe we could use a binary search to improve efficiency.
-            auto biggerThan = [&](decltype(nodeMap)::const_reference pair) { return std::get<0>(pair) > hash(key); };
-            auto firstBiggerThan = std::find_if(nodeMap.begin(), nodeMap.end(), biggerThan);
+            auto greater = nodeMap.upper_bound(getHash(nodeKey));
 
-            if (nodeMap.end() != firstBiggerThan)
+            if (nodeMap.end() != greater)
             {
-                return firstBiggerThan->second;
+                return greater->second;
             }
             else
             {
@@ -77,7 +50,13 @@ namespace ConsistenHashing
         }
 
     private:
-        std::map<HashCode_t, std::string> nodeMap;
+        static uint32_t getHash(const std::string &key)
+        {
+            std::size_t hash = std::hash<std::string>{}(key);
+            return static_cast<uint32_t>(hash % 0xffff'ffff);
+        }
+
+        std::map<uint32_t, std::string> nodeMap;
     };
 
 } // namespace ConsistenHashing
